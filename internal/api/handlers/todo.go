@@ -82,10 +82,11 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request){
 	
 	url := BASE_URL + "todos/"+id;
 
-	req, err := http.NewRequest(http.MethodDelete, url, bytes.NewBuffer(reqBody)); if err != nil{
+	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(reqBody)); if err != nil{
 		fmt.Println("Something went wrong:", err) 
 	}
 
+	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{} 
 	resp, err := client.Do(req); if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -102,7 +103,7 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request){
 	fmt.Println(string(content))
 	fmt.Println(string(reqBody))
  
-	w.Write(content) 
+	w.Write(content)
 	defer resp.Body.Close()
 			
 } 
