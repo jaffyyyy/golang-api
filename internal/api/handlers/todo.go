@@ -70,7 +70,7 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request){
 		return
 	} 
  
-	req, err := http.NewRequest(http.MethodPut, "https://dummyjson.com/todos/" + id, bytes.NewBuffer(reqBody)) 
+	req, err := http.NewRequest(http.MethodPut, BASE_URL + id, bytes.NewBuffer(reqBody)) 
 	if err != nil{
 		fmt.Fprintf(w, "Something went wrong: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
