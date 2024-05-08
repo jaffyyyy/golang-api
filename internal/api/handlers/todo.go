@@ -115,40 +115,40 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request){
 			w.Write(jsonResponse)
 			
 		} 
-		
-		func DeleteTodo(w http.ResponseWriter, r *http.Request){
-			w.Header().Set("Content-Type", "application/json")
-			vars := mux.Vars(r)
-			id := vars["id"]
+	
+	func DeleteTodo(w http.ResponseWriter, r *http.Request){
+		w.Header().Set("Content-Type", "application/json")
+		vars := mux.Vars(r)
+		id := vars["id"]
 
-			req, err := http.NewRequest(http.MethodDelete, BASE_URL + "/todos/" + id, bytes.NewBuffer([]byte("")))
-			if err != nil {
-				fmt.Printf("Something went wrong: %v", err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
-			resp, err := http.DefaultClient.Do(req); if err != nil {
-				fmt.Printf("Something went wrong: %v", err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
-			// read response body
-			bodyBytes, err := io.ReadAll(resp.Body); if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			} 
-
-			// unmarshal and store to Todo struct
-			jsonResponse, err := json.Marshal(bodyBytes); if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
-			defer resp.Body.Close()
-
-			w.WriteHeader(http.StatusCreated)
-			w.Write(jsonResponse)
-
+		req, err := http.NewRequest(http.MethodDelete, BASE_URL + "/todos/" + id, bytes.NewBuffer([]byte("")))
+		if err != nil {
+			fmt.Printf("Something went wrong: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
+
+		resp, err := http.DefaultClient.Do(req); if err != nil {
+			fmt.Printf("Something went wrong: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		// read response body
+		bodyBytes, err := io.ReadAll(resp.Body); if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		} 
+
+		// unmarshal and store to Todo struct
+		jsonResponse, err := json.Marshal(bodyBytes); if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		defer resp.Body.Close()
+
+		w.WriteHeader(http.StatusCreated)
+		w.Write(jsonResponse)
+
+	}
