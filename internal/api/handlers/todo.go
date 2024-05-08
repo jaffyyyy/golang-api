@@ -1,22 +1,25 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/jaffyyyy/golang-api/internal/api/structs"
 )
 
-const URL string = "https://dummyjson.com/todos"
+const BASE_URL string = "https://dummyjson.com"
 
 var todos structs.TodoResponse
 
 // Define a handler function for the /users endpoint
 func Todos(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "application/json") // Set appropriate content type
 	// Get the list of users from the database
-	resp, err := http.Get(URL)
+	resp, err := http.Get(BASE_URL + "/todos")
 
 	if err != nil {
 		// Handle error gracefully, e.g., return an error response with appropriate HTTP status code
@@ -50,8 +53,65 @@ func Todos(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	defer resp.Body.Close()
 
 	// Write the JSON response to the ResponseWriter
 	w.Write(jsonResponse)
-	defer resp.Body.Close()
+}
+
+func UpdateTodo(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Content-Type", "application/json")
+	vars := mux.Vars(r)
+	id := vars["id"]
+ 
+	reqBody, err := io.ReadAll(r.Body)
+	if err != nil { 
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	} 
+ 
+	req, err := http.NewRequest(http.MethodPut, "https://dummyjson.com/todos/" + id, bytes.NewBuffer(reqBody)) 
+	if err != nil{
+		fmt.Fprintf(w, "Something went wrong: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Printf("client: error making http request: %s\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	
+	
+	// Read the response body
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		fmt.Fprintf(w, "Error reading response body: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	} 
+
+	var todo *structs.Todo
+	// Unmarshal the JSON response into a slice of Todo structs
+	err = json.Unmarshal(body, &todo)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest) // Could be 400 for invalid JSON format
+		return
+	}
+
+	// Marshal the slice of Todo structs back into JSON
+	jsonResponse, err := json.Marshal(todo)
+	if err != nil {
+		fmt.Fprintf(w, "Error marshalling todos to JSON: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	
+	defer res.Body.Close()
+
+	// Write the JSON response to the ResponseWriter
+	w.Write(jsonResponse)
+	
 }
