@@ -10,5 +10,5 @@ type Todo struct {
 	ID        int    `json:"id"`
 	Todo      string `json:"todo"`
 	Completed bool   `json:"completed"`
-	Userid    int    `json:"userid"`
+	Userid    int    `json:"userId"`
 }

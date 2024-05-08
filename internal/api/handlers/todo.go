@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/jaffyyyy/golang-api/internal/api/structs"
@@ -63,41 +64,46 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Content-Type", "application/json")
 	vars := mux.Vars(r)
 	id := vars["id"]
-	
-	reqBody, err := io.ReadAll(r.Body)
-	if err != nil { 
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	} 
-	
-	url := BASE_URL + "todos/" + id;
 
-	req, err := http.NewRequest(http.MethodPatch, url, bytes.NewBuffer(reqBody))  
-	if err != nil{
-		fmt.Println("Something went wrong:", err)
+	ct := r.Header.Get("Content-Type")
+	if ct != "" {
+			mediaType := strings.ToLower(strings.TrimSpace(strings.Split(ct, ";")[0]))
+			if mediaType != "application/json" {
+					msg := "Content-Type header is not application/json"
+					http.Error(w, msg, http.StatusUnsupportedMediaType)
+					return
+			}
+	}
+	
+	reqBody, err := io.ReadAll(r.Body); if err != nil { 
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	} 
 	
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		fmt.Println("client: error making http request: ", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	} 
+	url := BASE_URL + "todos/"+id;
 
-	// Read the response body
-	bodyByte, err := io.ReadAll(res.Body)
-	if err != nil {
-			fmt.Println(w, "Error reading response body: ", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}  
+	req, err := http.NewRequest(http.MethodDelete, url, bytes.NewBuffer(reqBody)); if err != nil{
+		fmt.Println("Something went wrong:", err) 
+	}
+
+	client := &http.Client{} 
+	resp, err := client.Do(req); if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	} 
+ 
 	
-	defer res.Body.Close()
-	
-	// Write the JSON response to the ResponseWriter
-	w.Write(bodyByte)
+	// read
+	content, err := io.ReadAll(resp.Body); if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Println(string(content))
+	fmt.Println(string(reqBody))
+ 
+	w.Write(content) 
+	defer resp.Body.Close()
 			
 } 
 	
@@ -128,4 +134,41 @@ func DeleteTodo(w http.ResponseWriter, r *http.Request){
 	defer resp.Body.Close()
 	w.Write(bodyByte)
  
+}
+
+func CreateTodo(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	
+	ct := r.Header.Get("Content-Type")
+	if ct != "" {
+			mediaType := strings.ToLower(strings.TrimSpace(strings.Split(ct, ";")[0]))
+			if mediaType != "application/json" {
+					msg := "Content-Type header is not application/json"
+					http.Error(w, msg, http.StatusUnsupportedMediaType)
+					return
+			}
+	}
+
+	reqBody, err := io.ReadAll(r.Body); if err != nil{
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	} 
+	 
+	client := &http.Client{} 
+	resp, err := client.Post(BASE_URL+"todos/add", "application/json", bytes.NewBuffer(reqBody)); if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+ 
+	
+	// read
+	content, err := io.ReadAll(resp.Body); if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	} 
+
+	w.Write(content)
+	
+	defer resp.Body.Close()
+	  
 }
