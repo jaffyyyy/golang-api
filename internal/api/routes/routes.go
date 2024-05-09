@@ -5,6 +5,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/jaffyyyy/golang-api/internal/api/handlers"
+	"github.com/rs/cors"
 )
 
 
@@ -15,5 +16,17 @@ func NewRouter(r *mux.Router){
 	r.HandleFunc("/api/todos/{id}", handlers.DeleteTodo).Methods(http.MethodDelete)
 	r.HandleFunc("/api/todos/add", handlers.CreateTodo).Methods(http.MethodPost) 
 
-	http.ListenAndServe(":8000", r)
+	origins := []string{"*"} 
+	
+	c := cors.New(cors.Options{
+		AllowedOrigins:   origins,
+		AllowedMethods:   []string{"HEAD", "GET", "POST", "PUT", "DELETE"},
+		AllowedHeaders:   []string{"*"},
+		ExposedHeaders:   []string{"X-Execution-ID"},
+		AllowCredentials: true,
+	})
+
+	handler := c.Handler(r)
+
+	http.ListenAndServe(":8000", handler)
 } 
